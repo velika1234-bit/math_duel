@@ -1,16 +1,16 @@
 {
   "short_name": "МатДуел",
-  "name": "Математически Дуел ✨ Gemini Edition",
+  "name": "Математически Дуел: Gemini Edition",
   "icons": [
     {
-      "src": "https://api.dicebear.com/7.x/adventurer/svg?seed=Buddy&backgroundColor=b6e3f4",
-      "type": "image/svg+xml",
+      "src": "[https://api.dicebear.com/7.x/adventurer/png?seed=Buddy&backgroundColor=b6e3f4](https://api.dicebear.com/7.x/adventurer/png?seed=Buddy&backgroundColor=b6e3f4)",
+      "type": "image/png",
       "sizes": "192x192",
       "purpose": "any"
     },
     {
-      "src": "https://api.dicebear.com/7.x/adventurer/svg?seed=Kitty&backgroundColor=ffd5dc",
-      "type": "image/svg+xml",
+      "src": "[https://api.dicebear.com/7.x/adventurer/png?seed=Kitty&backgroundColor=ffd5dc](https://api.dicebear.com/7.x/adventurer/png?seed=Kitty&backgroundColor=ffd5dc)",
+      "type": "image/png",
       "sizes": "512x512",
       "purpose": "maskable"
     }
@@ -23,3 +23,4 @@
   "description": "Забавна математическа игра за деца с изкуствен интелект.",
   "orientation": "portrait"
 }
+
