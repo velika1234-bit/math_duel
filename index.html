@@ -173,7 +173,6 @@
 
     <!-- Екран 3: Игра -->
     <div id="screen-game" class="screen">
-        <!-- ГОРНО ПОЛЕ (Играч 1) -->
         <div class="player-area player-1" id="p1-area">
             <div id="p1-feedback" class="feedback"></div>
             <div class="flex flex-col items-center w-full">
@@ -189,7 +188,6 @@
             </div>
         </div>
 
-        <!-- РАЗДЕЛИТЕЛ С ПРОГРЕС -->
         <div class="divider">
             <div class="progress-container">
                 <div id="progress-p1" class="progress-bar progress-p1" style="width: 0%"></div>
@@ -197,7 +195,6 @@
             </div>
         </div>
 
-        <!-- ДОЛНО ПОЛЕ (Играч 2) -->
         <div class="player-area player-2" id="p2-area">
             <div id="p2-feedback" class="feedback"></div>
             <div class="flex flex-col items-center w-full">
@@ -229,7 +226,8 @@
     </div>
 
     <script>
-        const apiKey = ""; 
+        // ТУК Е ВАШИЯТ API КЛЮЧ
+        const apiKey = "AIzaSyBRSiitoPDvEBMUnKb63AteGrkkUUKA1q4"; 
 
         let players = {
             1: { name: 'Играч 1', score: 0, input: '', currentAns: 0, questionText: '' },
@@ -252,6 +250,7 @@
         }
 
         async function callGemini(prompt, sys = "Ти си забавен учител по математика. Отговаряй винаги с JSON.") {
+            if (!apiKey) return null;
             const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
             const payload = {
                 contents: [{ parts: [{ text: prompt }] }],
@@ -267,6 +266,7 @@
                 const content = data.candidates?.[0]?.content?.parts?.[0]?.text;
                 return content ? JSON.parse(content) : null;
             } catch (e) {
+                console.error("Gemini Error:", e);
                 return null;
             }
         }
@@ -344,10 +344,10 @@
                 }
             } else {
                 const opType = gameSettings.op === '*' ? 'умножение' : 'деление';
-                // Инструкции за по-кратка задача
                 const prompt = `Напиши 1 МНОГО КРАТКА текстова задача (максимум 10 думи) за ${opType} на български. Използвай малки числа. Формат: {"question": "...", "answer": число}`;
                 const res = await callGemini(prompt);
-                if (res) { q = res.question; ans = res.answer; } else { q = "Възникна грешка!"; ans = 0; }
+                if (res) { q = res.question; ans = res.answer; } 
+                else { q = "Възникна грешка в ИИ! Проверете връзката."; ans = 0; }
             }
             players[pId].currentAns = ans;
             qEl.innerText = q;
