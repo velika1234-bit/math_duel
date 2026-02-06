@@ -13,7 +13,7 @@
       "sizes": "512x512"
     }
   ],
-  "start_url": "./math_duel.html",
+  "start_url": "./index.html",
   "background_color": "#f0f9ff",
   "display": "standalone",
   "scope": "./",
