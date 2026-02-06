@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Математически Дуел ✨ Gemini</title>
     
-    <!-- PWA Настройки - КРИТИЧНО ЗА ИНСТАЛИРАНЕ -->
+    <!-- PWA Настройки -->
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#3b82f6">
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -15,6 +15,10 @@
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Comfortaa:wght@400;700&display=swap');
         
+        :root {
+            --app-height: 100vh;
+        }
+
         body {
             font-family: 'Comfortaa', cursive;
             margin: 0;
@@ -23,8 +27,10 @@
             background: #f0f9ff;
             user-select: none;
             touch-action: none;
-            height: 100vh;
+            height: var(--app-height);
             width: 100vw;
+            display: flex;
+            flex-direction: column;
         }
 
         .screen {
@@ -34,38 +40,42 @@
             flex-direction: column;
             align-items: center;
             justify-content: center;
+            position: relative;
         }
 
         .active { display: flex; }
 
+        /* Динамични контейнери за играчите */
         .player-area {
-            height: calc(50vh - 30px);
+            flex: 1;
             width: 100%;
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: space-evenly;
-            padding: 10px;
+            justify-content: center;
+            padding: 1vh;
             position: relative;
+            min-height: 0; /* Важно за flex контейнери */
         }
 
         .player-1 { background-color: #dcfce7; transform: rotate(180deg); }
         .player-2 { background-color: #fee2e2; }
 
         .divider {
-            height: 60px;
+            height: 40px;
             width: 100%;
             background: #3b82f6;
             display: flex;
             align-items: center;
             justify-content: center;
             z-index: 50;
-            box-shadow: 0 0 15px rgba(0,0,0,0.2);
+            box-shadow: 0 0 10px rgba(0,0,0,0.2);
+            flex-shrink: 0;
         }
 
         .progress-container {
-            width: 85%;
-            height: 20px;
+            width: 80%;
+            height: 14px;
             background: rgba(255,255,255,0.3);
             border-radius: 10px;
             overflow: hidden;
@@ -76,18 +86,22 @@
         .progress-p1 { background: #22c55e; }
         .progress-p2 { background: #ef4444; }
 
+        /* Мащабируема клавиатура */
         .numpad {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
-            gap: 6px;
-            max-width: 240px;
+            gap: 1vh;
+            max-width: 80vw;
+            margin-top: 1vh;
         }
 
         .num-btn {
-            width: 50px;
-            height: 45px;
+            width: 12vw;
+            max-width: 50px;
+            height: 8vh;
+            max-height: 45px;
             background: white;
-            border-radius: 10px;
+            border-radius: 8px;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -97,22 +111,23 @@
             cursor: pointer;
         }
 
-        @media (max-height: 750px) {
-            .avatar { width: 45px; height: 45px; }
-            .num-btn { width: 45px; height: 38px; font-size: 1.1rem; }
-            .question-box { font-size: 0.85rem !important; min-height: 50px !important; }
-        }
-
         .num-btn:active { transform: translateY(2px); box-shadow: 0 1px 0 #cbd5e1; }
         .num-btn.confirm { background: #22c55e; color: white; box-shadow: 0 4px 0 #16a34a; }
         .num-btn.clear { background: #f97316; color: white; box-shadow: 0 4px 0 #ea580c; }
 
-        .avatar { border-radius: 50%; border: 3px solid white; }
+        .avatar { 
+            width: 10vh; 
+            max-width: 60px; 
+            height: 10vh; 
+            max-height: 60px; 
+            border-radius: 50%; 
+            border: 3px solid white; 
+        }
 
         .feedback {
             position: absolute;
             font-weight: bold;
-            font-size: 1.2rem;
+            font-size: 1.5rem;
             pointer-events: none;
             opacity: 0;
             transition: all 0.4s ease;
@@ -124,9 +139,13 @@
         @keyframes dots { 0%, 20% { content: '.'; } 40% { content: '..'; } 60% { content: '...'; } 80%, 100% { content: ''; } }
 
         .question-box {
-            padding: 8px 12px;
-            line-height: 1.2;
-            max-width: 95%;
+            padding: 1vh 2vw;
+            line-height: 1.1;
+            max-width: 90%;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            font-size: 0.9rem;
         }
     </style>
 </head>
@@ -149,8 +168,7 @@
             </div>
             <button onclick="goToSettings()" class="w-full bg-yellow-400 hover:bg-yellow-500 text-yellow-900 font-bold py-4 rounded-2xl text-xl shadow-lg transform active:scale-95 transition-all">НАПРЕД</button>
             
-            <!-- БУТОН ЗА ИНСТАЛИРАНЕ -->
-            <button id="install-btn" class="hidden mt-4 w-full border-2 border-purple-500 text-purple-600 font-bold py-2 rounded-xl text-xs uppercase hover:bg-purple-50 transition-colors">Инсталирай на телефона</button>
+            <button id="install-btn" class="hidden mt-4 w-full border-2 border-purple-500 text-purple-600 font-bold py-3 rounded-xl text-xs uppercase hover:bg-purple-50 transition-colors">Инсталирай на телефона</button>
         </div>
     </div>
 
@@ -178,11 +196,9 @@
     <div id="screen-game" class="screen">
         <div class="player-area player-1" id="p1-area">
             <div id="p1-feedback" class="feedback"></div>
-            <div class="flex flex-col items-center w-full">
-                <img src="https://api.dicebear.com/7.x/adventurer/svg?seed=Buddy&backgroundColor=b6e3f4" alt="Dog" class="avatar w-14 h-14 mb-1">
-                <div class="bg-white px-4 py-3 rounded-2xl shadow-sm text-sm font-bold text-center w-[92%] min-h-[60px] flex items-center justify-center question-box" id="p1-question">...</div>
-                <div class="text-2xl font-bold text-green-600 h-8" id="p1-input-display"></div>
-            </div>
+            <img src="https://api.dicebear.com/7.x/adventurer/svg?seed=Buddy&backgroundColor=b6e3f4" alt="Dog" class="avatar">
+            <div class="bg-white px-4 py-2 rounded-2xl shadow-sm text-sm font-bold text-center w-[92%] flex items-center justify-center question-box" id="p1-question">...</div>
+            <div class="text-2xl font-bold text-green-600 h-8" id="p1-input-display"></div>
             <div class="numpad">
                 <div class="num-btn" onclick="addNum(1, 1)">1</div><div class="num-btn" onclick="addNum(1, 2)">2</div><div class="num-btn" onclick="addNum(1, 3)">3</div>
                 <div class="num-btn" onclick="addNum(1, 4)">4</div><div class="num-btn" onclick="addNum(1, 5)">5</div><div class="num-btn" onclick="addNum(1, 6)">6</div>
@@ -200,11 +216,9 @@
 
         <div class="player-area player-2" id="p2-area">
             <div id="p2-feedback" class="feedback"></div>
-            <div class="flex flex-col items-center w-full">
-                <img src="https://api.dicebear.com/7.x/adventurer/svg?seed=Kitty&backgroundColor=ffd5dc" alt="Cat" class="avatar w-14 h-14 mb-1">
-                <div class="bg-white px-4 py-3 rounded-2xl shadow-sm text-sm font-bold text-center w-[92%] min-h-[60px] flex items-center justify-center question-box" id="p2-question">...</div>
-                <div class="text-2xl font-bold text-red-600 h-8" id="p2-input-display"></div>
-            </div>
+            <img src="https://api.dicebear.com/7.x/adventurer/svg?seed=Kitty&backgroundColor=ffd5dc" alt="Cat" class="avatar">
+            <div class="bg-white px-4 py-2 rounded-2xl shadow-sm text-sm font-bold text-center w-[92%] flex items-center justify-center question-box" id="p2-question">...</div>
+            <div class="text-2xl font-bold text-red-600 h-8" id="p2-input-display"></div>
             <div class="numpad" id="p2-numpad">
                 <div class="num-btn" onclick="addNum(2, 1)">1</div><div class="num-btn" onclick="addNum(2, 2)">2</div><div class="num-btn" onclick="addNum(2, 3)">3</div>
                 <div class="num-btn" onclick="addNum(2, 4)">4</div><div class="num-btn" onclick="addNum(2, 5)">5</div><div class="num-btn" onclick="addNum(2, 6)">6</div>
@@ -221,24 +235,27 @@
         <div class="z-10 text-center">
             <h2 class="text-3xl font-bold mb-2">ПОБЕДИТЕЛ!</h2>
             <div id="winner-name" class="text-5xl font-black text-yellow-300 mb-10 uppercase tracking-tighter">ИМЕ</div>
-            <div class="flex flex-col gap-4 items-center">
-                <button onclick="resetGame()" class="bg-white text-purple-700 px-12 py-4 rounded-2xl text-xl font-bold shadow-xl hover:bg-gray-100 transition-colors">НОВА ИГРА</button>
-                <button onclick="switchScreen('screen-settings')" class="text-white border-2 border-white/50 px-8 py-2 rounded-xl text-sm font-bold hover:bg-white/10">СМЯНА НА НИВО</button>
-            </div>
+            <button onclick="resetGame()" class="bg-white text-purple-700 px-12 py-4 rounded-2xl text-xl font-bold shadow-xl">НОВА ИГРА</button>
         </div>
     </div>
 
     <script>
-        // ТУК Е ВАШИЯТ API КЛЮЧ
         const apiKey = "AIzaSyBRSiitoPDvEBMUnKb63AteGrkkUUKA1q4"; 
 
         let players = {
-            1: { name: 'Играч 1', score: 0, input: '', currentAns: 0, questionText: '' },
-            2: { name: 'Играч 2', score: 0, input: '', currentAns: 0, questionText: '', isAI: false }
+            1: { name: 'Играч 1', score: 0, input: '', currentAns: 0 },
+            2: { name: 'Играч 2', score: 0, input: '', currentAns: 0, isAI: false }
         };
         let gameSettings = { difficulty: 'simple', op: '*' };
         const WIN_SCORE = 10;
         let gameActive = false;
+
+        // Фикс за височината на мобилни браузъри
+        function updateAppHeight() {
+            document.documentElement.style.setProperty('--app-height', `${window.innerHeight}px`);
+        }
+        window.addEventListener('resize', updateAppHeight);
+        updateAppHeight();
 
         async function fetchWithRetry(url, options, retries = 5, backoff = 1000) {
             try {
@@ -252,29 +269,24 @@
             }
         }
 
-        async function callGemini(prompt, sys = "Ти си забавен учител по математика. Отговаряй винаги с JSON.") {
+        async function callGemini(prompt, sys = "Ти си забавен учител по математика. Отговаряй с JSON.") {
             if (!apiKey) return null;
             const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
-            const payload = {
-                contents: [{ parts: [{ text: prompt }] }],
-                systemInstruction: { parts: [{ text: sys }] },
-                generationConfig: { responseMimeType: "application/json" }
-            };
             try {
                 const data = await fetchWithRetry(url, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
+                    body: JSON.stringify({
+                        contents: [{ parts: [{ text: prompt }] }],
+                        systemInstruction: { parts: [{ text: sys }] },
+                        generationConfig: { responseMimeType: "application/json" }
+                    })
                 });
                 const content = data.candidates?.[0]?.content?.parts?.[0]?.text;
                 return content ? JSON.parse(content) : null;
-            } catch (e) {
-                console.error("Gemini Error:", e);
-                return null;
-            }
+            } catch (e) { return null; }
         }
 
-        // Логика
         function goToSettings() {
             players[1].name = document.getElementById('p1-name').value || 'Играч 1';
             players[2].name = document.getElementById('p2-name').value || 'Играч 2';
@@ -284,12 +296,12 @@
         function switchScreen(id) {
             document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
             document.getElementById(id).classList.add('active');
+            if(id === 'screen-game') updateAppHeight();
         }
 
         function toggleAI() {
             players[2].isAI = !players[2].isAI;
-            const btn = document.getElementById('ai-toggle');
-            btn.innerText = players[2].isAI ? "🤖 Робот" : "👦 Човек";
+            document.getElementById('ai-toggle').innerText = players[2].isAI ? "🤖 Робот" : "👦 Човек";
             document.getElementById('p2-name').value = players[2].isAI ? "Робот Макс" : "Играч 2";
         }
 
@@ -330,8 +342,7 @@
 
         async function generateProblem(pId) {
             const qEl = document.getElementById(`p${pId}-question`);
-            qEl.innerHTML = '<span class="loading-dots">Генерирам</span>';
-            
+            qEl.innerHTML = '<span class="loading-dots">Мисли</span>';
             players[pId].input = '';
             document.getElementById(`p${pId}-input-display`).innerText = '';
 
@@ -339,18 +350,13 @@
             if (gameSettings.difficulty === 'simple') {
                 let a = Math.floor(Math.random()*8)+2;
                 let b = Math.floor(Math.random()*8)+2;
-                if (gameSettings.op === '*') {
-                    q = `${a} × ${b} = ?`; ans = a*b;
-                } else {
-                    let product = a * b;
-                    q = `${product} ÷ ${a} = ?`; ans = b;
-                }
+                if (gameSettings.op === '*') { q = `${a} × ${b} = ?`; ans = a*b; }
+                else { q = `${a*b} ÷ ${a} = ?`; ans = b; }
             } else {
-                const opType = gameSettings.op === '*' ? 'умножение' : 'деление';
-                const prompt = `Напиши 1 МНОГО КРАТКА текстова задача (максимум 10 думи) за ${opType} на български. Използвай малки числа. Формат: {"question": "...", "answer": число}`;
+                const prompt = `Едно изречение задача за ${gameSettings.op === '*' ? 'умножение' : 'деление'} на български. JSON: {"question": "...", "answer": число}`;
                 const res = await callGemini(prompt);
                 if (res) { q = res.question; ans = res.answer; } 
-                else { q = "Възникна грешка в ИИ! Проверете връзката."; ans = 0; }
+                else { q = "Грешка! Провери връзката."; ans = 0; }
             }
             players[pId].currentAns = ans;
             qEl.innerText = q;
@@ -363,7 +369,6 @@
             if (!gameActive || players[pId].input === '') return;
             const val = parseInt(players[pId].input);
             clearInput(pId);
-
             if (val === players[pId].currentAns) {
                 players[pId].score++; 
                 showFeedback(pId, "ВЯРНО! ✨", "#16a34a");
@@ -393,7 +398,7 @@
                 players[2].input = players[2].currentAns.toString();
                 checkAnswer(2);
                 if (gameActive) triggerAI();
-            }, 6000 + Math.random()*5000);
+            }, 7000 + Math.random()*5000);
         }
 
         function endGame(w) {
@@ -403,44 +408,25 @@
 
         function resetGame() { switchScreen('screen-start'); }
 
-        // --- PWA ЛОГИКА ЗА ИНСТАЛИРАНЕ ---
-        
-        // 1. Регистрация на Service Worker (ред 262)
+        // --- PWA LOGIC ---
         if ('serviceWorker' in navigator && (window.location.protocol === 'http:' || window.location.protocol === 'https:')) {
-            window.addEventListener('load', () => { 
-                navigator.serviceWorker.register('./sw.js').catch((err) => {
-                    console.log('SW registration failed:', err);
-                }); 
-            });
+            window.addEventListener('load', () => { navigator.serviceWorker.register('./sw.js').catch(() => {}); });
         }
         
-        // 2. Слушател за събитието за инсталиране (ред 272)
         let defPrompt;
         window.addEventListener('beforeinstallprompt', e => { 
-            // Спира автоматичното показване на системния банер
             e.preventDefault(); 
-            // Запазва събитието, за да го извикаме по-късно
             defPrompt = e; 
-            // Показва нашия скрит бутон "Инсталирай на телефона"
             document.getElementById('install-btn').classList.remove('hidden'); 
         });
 
-        // 3. Логика при клик на бутона (ред 282)
         document.getElementById('install-btn').onclick = () => { 
             if(defPrompt) { 
-                // Извиква системния прозорец за инсталация
                 defPrompt.prompt(); 
-                defPrompt.userChoice.then((choiceResult) => {
-                    if (choiceResult.outcome === 'accepted') {
-                        console.log('User accepted the install prompt');
-                        document.getElementById('install-btn').classList.add('hidden');
-                    }
-                    defPrompt = null; 
-                });
+                defPrompt.userChoice.then((res) => { if (res.outcome === 'accepted') document.getElementById('install-btn').classList.add('hidden'); defPrompt = null; });
             } 
         };
 
-        // Fireworks
         const can = document.getElementById('fireworks-canvas');
         const ctx = can.getContext('2d');
         let pts = [];
@@ -462,4 +448,3 @@
     </script>
 </body>
 </html>
-
