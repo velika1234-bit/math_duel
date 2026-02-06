@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="bg">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Математически Дуел ✨ Face-to-Face</title>
+    
+    <!-- PWA Мета тагове -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#3b82f6">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="apple-touch-icon" href="https://api.dicebear.com/7.x/adventurer/svg?seed=Buddy">
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Comfortaa:wght@400;700&display=swap');
+        
+        body {
+            font-family: 'Comfortaa', cursive;
+            margin: 0;
+            overflow: hidden;
+            background: #f0f9ff;
+            user-select: none;
+            touch-action: manipulation;
+        }
+
+        .screen {
+            display: none;
+            height: 100vh;
+            width: 100vw;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.5s ease;
+        }
+
+        .active { display: flex; }
+
+        .player-area {
+            flex: 1;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            padding: 20px;
+        }
+
+        /* ОГЛЕДАЛНО ОБРЪЩАНЕ ЗА ИГРАЧ 1 */
+        .player-1 { 
+            background-color: #dcfce7; 
+            transform: rotate(180deg);
+        }
+
+        .player-2 { background-color: #fee2e2; }
+
+        .divider {
+            height: 60px;
+            width: 100%;
+            background: #3b82f6;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            z-index: 10;
+            box-shadow: 0 0 15px rgba(0,0,0,0.2);
+        }
+
+        .progress-container {
+            width: 80%;
+            height: 25px;
+            background: rgba(255,255,255,0.3);
+            border-radius: 15px;
+            overflow: hidden;
+            display: flex;
+        }
+
+        .progress-bar {
+            height: 100%;
+            transition: width 0.3s ease;
+        }
+        .progress-p1 { background: #22c55e; border-right: 2px solid white; }
+        .progress-p2 { background: #ef4444; border-left: 2px solid white; }
+
+        .numpad {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        .num-btn {
+            width: 45px;
+            height: 45px;
+            background: white;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.1rem;
+            font-weight: bold;
+            box-shadow: 0 4px 0 #cbd5e1;
+            cursor: pointer;
+        }
+
+        .num-btn:active { transform: translateY(2px); box-shadow: 0 2px 0 #cbd5e1; }
+        .num-btn.confirm { background: #22c55e; color: white; box-shadow: 0 4px 0 #16a34a; }
+        .num-btn.clear { background: #f97316; color: white; box-shadow: 0 4px 0 #ea580c; }
+
+        .avatar { width: 60px; height: 60px; border-radius: 50%; border: 4px solid white; margin-bottom: 5px; }
+
+        .feedback {
+            position: absolute;
+            font-weight: bold;
+            font-size: 1.2rem;
+            pointer-events: none;
+            opacity: 0;
+            transition: all 0.5s ease;
+            text-align: center;
+            width: 80%;
+            z-index: 20;
+        }
+
+        .gemini-btn {
+            background: linear-gradient(135deg, #6366f1, #a855f7);
+            color: white;
+            padding: 6px 12px;
+            border-radius: 9999px;
+            font-size: 0.7rem;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            border: none;
+        }
+
+        .loading-dots:after { content: '.'; animation: dots 1.5s steps(5, end) infinite; }
+        @keyframes dots { 0%, 20% { content: '.'; } 40% { content: '..'; } 60% { content: '...'; } 80%, 100% { content: ''; } }
+    </style>
+</head>
+<body>
+
+    <!-- Екран 1: Вход -->
+    <div id="screen-start" class="screen active bg-gradient-to-b from-blue-400 to-blue-600 text-white p-6">
+        <h1 class="text-3xl font-bold mb-4 text-center">Математически Дуел ✨</h1>
+        <div class="bg-white p-6 rounded-3xl shadow-2xl text-gray-800 w-full max-w-md">
+            <div class="mb-4">
+                <label class="block font-bold mb-1 text-sm">Играч 1 (🐶)</label>
+                <input type="text" id="p1-name" value="Играч 1" class="w-full border-2 border-blue-100 rounded-xl p-2 focus:outline-none focus:border-blue-500">
+            </div>
+            <div class="mb-6">
+                <label class="block font-bold mb-1 text-sm">Играч 2 (🐱)</label>
+                <div class="flex gap-2">
+                    <input type="text" id="p2-name" value="Играч 2" class="flex-1 border-2 border-blue-100 rounded-xl p-2 focus:outline-none focus:border-blue-500">
+                    <button onclick="toggleAI()" id="ai-toggle" class="bg-purple-500 text-white px-3 rounded-xl font-bold text-[10px]">🤖 Робот</button>
+                </div>
+            </div>
+            <button onclick="goToSettings()" class="w-full bg-yellow-400 hover:bg-yellow-500 text-yellow-900 font-bold py-3 rounded-2xl text-lg shadow-lg transition-all">НАПРЕД</button>
+            <button id="install-btn" class="hidden mt-4 w-full border-2 border-purple-500 text-purple-600 font-bold py-2 rounded-xl text-sm">📥 ИНСТАЛИРАЙ</button>
+        </div>
+    </div>
+
+    <!-- Екран 2: Настройки -->
+    <div id="screen-settings" class="screen bg-blue-50 p-6">
+        <h2 class="text-2xl font-bold mb-6 text-blue-800 text-center">Избери приключение</h2>
+        <div class="grid grid-cols-2 gap-4 w-full max-w-lg">
+            <div class="bg-white p-4 rounded-2xl shadow-md border-4 border-transparent hover:border-blue-400 cursor-pointer text-center transition" onclick="selectDifficulty('simple')">
+                <div class="text-3xl mb-1">🔢</div>
+                <h3 class="text-sm font-bold">Таблица</h3>
+            </div>
+            <div class="bg-white p-4 rounded-2xl shadow-md border-4 border-transparent hover:border-purple-400 cursor-pointer text-center transition" onclick="selectDifficulty('hard')">
+                <div class="text-3xl mb-1">✨</div>
+                <h3 class="text-sm font-bold">Задачи (ИИ)</h3>
+            </div>
+        </div>
+        <div class="flex gap-4 mt-6">
+            <button onclick="selectOp('*')" id="op-mult" class="op-btn bg-white px-8 py-2 rounded-xl border-2 border-blue-400 font-bold text-blue-600">×</button>
+            <button onclick="selectOp('/')" id="op-div" class="op-btn bg-white px-8 py-2 rounded-xl border-2 border-blue-400 font-bold text-blue-600">÷</button>
+        </div>
+        <button onclick="startGame()" class="mt-8 bg-green-500 text-white px-12 py-3 rounded-2xl text-lg font-bold shadow-lg">СТАРТ!</button>
+    </div>
+
+    <!-- Екран 3: Игра -->
+    <div id="screen-game" class="screen">
+        <!-- ГОРНО ПОЛЕ (ОБЪРНАТО) -->
+        <div class="player-area player-1" id="p1-area">
+            <div id="p1-feedback" class="feedback"></div>
+            <div class="flex flex-col items-center">
+                <div class="flex items-center gap-2 mb-1">
+                    <img src="https://api.dicebear.com/7.x/adventurer/svg?seed=Buddy&backgroundColor=b6e3f4" alt="Dog" class="avatar">
+                    <button onclick="speakQuestion(1)" class="gemini-btn">✨</button>
+                </div>
+                <div class="bg-white px-3 py-2 rounded-xl shadow-md text-xs font-bold text-center w-[90%] min-h-[50px] flex items-center justify-center" id="p1-question">...</div>
+                <div class="text-xl font-bold text-green-600 h-6" id="p1-input-display"></div>
+            </div>
+            <div class="numpad">
+                <div class="num-btn" onclick="addNum(1, 1)">1</div><div class="num-btn" onclick="addNum(1, 2)">2</div><div class="num-btn" onclick="addNum(1, 3)">3</div>
+                <div class="num-btn" onclick="addNum(1, 4)">4</div><div class="num-btn" onclick="addNum(1, 5)">5</div><div class="num-btn" onclick="addNum(1, 6)">6</div>
+                <div class="num-btn" onclick="addNum(1, 7)">7</div><div class="num-btn" onclick="addNum(1, 8)">8</div><div class="num-btn" onclick="addNum(1, 9)">9</div>
+                <div class="num-btn clear" onclick="clearInput(1)">C</div><div class="num-btn" onclick="addNum(1, 0)">0</div><div class="num-btn confirm" onclick="checkAnswer(1)">✔</div>
+            </div>
+        </div>
+
+        <!-- Център -->
+        <div class="divider">
+            <div class="progress-container">
+                <div id="progress-p1" class="progress-bar progress-p1" style="width: 0%"></div>
+                <div id="progress-p2" class="progress-bar progress-p2" style="width: 0%"></div>
+            </div>
+        </div>
+
+        <!-- ДОЛНО ПОЛЕ -->
+        <div class="player-area player-2" id="p2-area">
+            <div id="p2-feedback" class="feedback"></div>
+            <div class="flex flex-col items-center">
+                <div class="flex items-center gap-2 mb-1">
+                    <img src="https://api.dicebear.com/7.x/adventurer/svg?seed=Kitty&backgroundColor=ffd5dc" alt="Cat" class="avatar">
+                    <button onclick="speakQuestion(2)" id="p2-tts-btn" class="gemini-btn">✨</button>
+                </div>
+                <div class="bg-white px-3 py-2 rounded-xl shadow-md text-xs font-bold text-center w-[90%] min-h-[50px] flex items-center justify-center" id="p2-question">...</div>
+                <div class="text-xl font-bold text-red-600 h-6" id="p2-input-display"></div>
+            </div>
+            <div class="numpad" id="p2-numpad">
+                <div class="num-btn" onclick="addNum(2, 1)">1</div><div class="num-btn" onclick="addNum(2, 2)">2</div><div class="num-btn" onclick="addNum(2, 3)">3</div>
+                <div class="num-btn" onclick="addNum(2, 4)">4</div><div class="num-btn" onclick="addNum(2, 5)">5</div><div class="num-btn" onclick="addNum(2, 6)">6</div>
+                <div class="num-btn" onclick="addNum(2, 7)">7</div><div class="num-btn" onclick="addNum(2, 8)">8</div><div class="num-btn" onclick="addNum(2, 9)">9</div>
+                <div class="num-btn clear" onclick="clearInput(2)">C</div><div class="num-btn" onclick="addNum(2, 0)">0</div><div class="num-btn confirm" onclick="checkAnswer(2)">✔</div>
+            </div>
+            <div id="p2-ai-msg" class="hidden text-red-500 font-bold italic animate-pulse text-[10px]">Роботът пресмята...</div>
+        </div>
+    </div>
+
+    <!-- Резултат -->
+    <div id="screen-result" class="screen bg-purple-700 text-white p-6 relative">
+        <canvas id="fireworks-canvas" class="absolute inset-0 pointer-events-none"></canvas>
+        <div class="z-10 text-center">
+            <h2 class="text-3xl font-bold mb-2">ПОБЕДИТЕЛ!</h2>
+            <div id="winner-name" class="text-5xl font-black text-yellow-300 mb-8 uppercase">ИМЕ</div>
+            <div class="flex flex-col gap-3 items-center">
+                <button onclick="resetGame()" class="bg-white text-purple-700 px-10 py-3 rounded-xl font-bold shadow-xl">НОВА ИГРА</button>
+                <button id="praise-btn" onclick="getGeminiPraise()" class="gemini-btn p-4 text-sm">✨ ИИ Поздравление</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const apiKey = "";
+        let players = {
+            1: { name: 'Играч 1', score: 0, input: '', currentAns: 0, questionText: '' },
+            2: { name: 'Играч 2', score: 0, input: '', currentAns: 0, questionText: '', isAI: false }
+        };
+        let gameSettings = { difficulty: 'simple', op: '*' };
+        const WIN_SCORE = 10;
+        let gameActive = false;
+
+        // Gemini Utility
+        async function callGemini(prompt, sys = "Забавен учител.") {
+            try {
+                const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        contents: [{ parts: [{ text: prompt }] }],
+                        systemInstruction: { parts: [{ text: sys }] },
+                        generationConfig: { responseMimeType: "application/json" }
+                    })
+                });
+                const data = await response.json();
+                return JSON.parse(data.candidates[0].content.parts[0].text);
+            } catch (e) { return null; }
+        }
+
+        async function callTTS(text) {
+            try {
+                const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-tts:generateContent?key=${apiKey}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        contents: [{ parts: [{ text: `Say in Bulgarian: ${text}` }] }],
+                        generationConfig: {
+                            responseModalities: ["AUDIO"],
+                            speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName: "Kore" } } }
+                        }
+                    })
+                });
+                const data = await response.json();
+                playAudio(data.candidates[0].content.parts[0].inlineData.data);
+            } catch (e) {}
+        }
+
+        function playAudio(b64) {
+            const bin = atob(b64);
+            const bytes = new Int16Array(bin.length / 2);
+            for (let i = 0; i < bin.length; i += 2) bytes[i / 2] = bin.charCodeAt(i) | (bin.charCodeAt(i + 1) << 8);
+            const header = createWavHeader(bytes, 24000);
+            new Audio(URL.createObjectURL(new Blob([header], {type:'audio/wav'}))).play();
+        }
+
+        function createWavHeader(samples, rate) {
+            const b = new ArrayBuffer(44 + samples.length * 2);
+            const v = new DataView(b);
+            const s = (o, str) => { for(let i=0; i<str.length; i++) v.setUint8(o+i, str.charCodeAt(i)); };
+            s(0, 'RIFF'); v.setUint32(4, 32 + samples.length*2, true); s(8, 'WAVE');
+            s(12, 'fmt '); v.setUint32(16, 16, true); v.setUint16(20, 1, true);
+            v.setUint16(22, 1, true); v.setUint32(24, rate, true); v.setUint32(28, rate*2, true);
+            v.setUint16(32, 2, true); v.setUint16(34, 16, true); s(36, 'data');
+            v.setUint32(40, samples.length*2, true);
+            for(let i=0; i<samples.length; i++) v.setInt16(44+i*2, samples[i], true);
+            return b;
+        }
+
+        // Logic
+        function toggleAI() {
+            players[2].isAI = !players[2].isAI;
+            document.getElementById('ai-toggle').innerText = players[2].isAI ? "🤖 Робот" : "👦 Човек";
+            document.getElementById('p2-name').value = players[2].isAI ? "Робот Макс" : "Играч 2";
+        }
+
+        function goToSettings() {
+            players[1].name = document.getElementById('p1-name').value || 'Играч 1';
+            players[2].name = document.getElementById('p2-name').value || 'Играч 2';
+            switchScreen('screen-settings');
+        }
+
+        function switchScreen(id) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById(id).classList.add('active');
+        }
+
+        function selectDifficulty(d) {
+            gameSettings.difficulty = d;
+            document.querySelectorAll('#screen-settings .bg-white').forEach(el => el.style.borderColor = 'transparent');
+            event.currentTarget.style.borderColor = d === 'simple' ? '#3b82f6' : '#a855f7';
+        }
+
+        function selectOp(op) {
+            gameSettings.op = op;
+            document.querySelectorAll('.op-btn').forEach(btn => {
+                btn.classList.remove('bg-blue-400', 'text-white');
+                if ((op === '*' && btn.innerText === '×') || (op === '/' && btn.innerText === '÷')) btn.classList.add('bg-blue-400', 'text-white');
+            });
+        }
+
+        function startGame() {
+            players[1].score = 0; players[2].score = 0;
+            updateProgress();
+            if (players[2].isAI) {
+                document.getElementById('p2-numpad').classList.add('hidden');
+                document.getElementById('p2-ai-msg').classList.remove('hidden');
+            } else {
+                document.getElementById('p2-numpad').classList.remove('hidden');
+                document.getElementById('p2-ai-msg').classList.add('hidden');
+            }
+            generateProblem(1); generateProblem(2);
+            switchScreen('screen-game');
+            gameActive = true;
+            if (players[2].isAI) triggerAI();
+        }
+
+        async function generateProblem(pId) {
+            const qEl = document.getElementById(`p${pId}-question`);
+            qEl.innerHTML = '<span class="loading-dots">...</span>';
+            
+            // ВАЖНО: Изчистваме инпута и неговия дисплей ВЕДНАГА
+            players[pId].input = '';
+            document.getElementById(`p${pId}-input-display`).innerText = '';
+
+            let a, b, q, ans;
+            if (gameSettings.difficulty === 'simple') {
+                if (gameSettings.op === '*') {
+                    a = Math.floor(Math.random()*8)+2; b = Math.floor(Math.random()*8)+2;
+                    q = `${a} × ${b} = ?`; ans = a*b;
+                } else {
+                    b = Math.floor(Math.random()*8)+2; ans = Math.floor(Math.random()*8)+2;
+                    a = b*ans; q = `${a} ÷ ${b} = ?`;
+                }
+            } else {
+                const res = await callGemini(`Напиши забавна задача за ${gameSettings.op==='*'?'умножение':'деление'} (JSON: question, answer)`);
+                if (res) { q = res.question; ans = res.answer; } else { q = "Грешка!"; ans = 0; }
+            }
+            players[pId].currentAns = ans; players[pId].questionText = q;
+            qEl.innerText = q;
+        }
+
+        function addNum(pId, n) { if (gameActive) { players[pId].input += n; document.getElementById(`p${pId}-input-display`).innerText = players[pId].input; } }
+        
+        function clearInput(pId) { 
+            players[pId].input = ''; 
+            document.getElementById(`p${pId}-input-display`).innerText = ''; 
+        }
+
+        function checkAnswer(pId) {
+            if (!gameActive || players[pId].input === '') return;
+            const val = parseInt(players[pId].input);
+            
+            // Изчистваме полето веднага след натискане на потвърждение за по-бърза игра
+            const currentInput = players[pId].input; 
+            clearInput(pId);
+
+            if (val === players[pId].currentAns) {
+                players[pId].score++; 
+                showFeedback(pId, "БРАВО! 🎉", "#16a34a");
+                updateProgress();
+                if (players[pId].score >= WIN_SCORE) return endGame(players[pId].name);
+                generateProblem(pId);
+            } else {
+                showFeedback(pId, `ГРЕШНО! (${players[pId].currentAns})`, "#dc2626");
+                // Вече е изчистено горе
+            }
+        }
+
+        function showFeedback(pId, txt, col) {
+            const el = document.getElementById(`p${pId}-feedback`);
+            el.innerText = txt; el.style.color = col; el.style.opacity = 1;
+            setTimeout(() => el.style.opacity = 0, 2000);
+        }
+
+        function updateProgress() {
+            document.getElementById('progress-p1').style.width = (players[1].score/WIN_SCORE)*50 + '%';
+            document.getElementById('progress-p2').style.width = (players[2].score/WIN_SCORE)*50 + '%';
+        }
+
+        function triggerAI() {
+            if (!gameActive || !players[2].isAI) return;
+            setTimeout(() => {
+                if (!gameActive) return;
+                players[2].input = players[2].currentAns.toString();
+                checkAnswer(2);
+                if (gameActive) triggerAI();
+            }, 7000 + Math.random()*3000);
+        }
+
+        function speakQuestion(pId) { if(players[pId].questionText) callTTS(players[pId].questionText); }
+
+        function endGame(w) {
+            gameActive = false; document.getElementById('winner-name').innerText = w;
+            switchScreen('screen-result'); startFireworks();
+        }
+
+        async function getGeminiPraise() {
+            const res = await callGemini(`Похвали ${document.getElementById('winner-name').innerText} (JSON: praise)`);
+            if (res) callTTS(res.praise);
+        }
+
+        function resetGame() { switchScreen('screen-start'); }
+
+        // PWA Installation
+        let defPrompt;
+        window.addEventListener('beforeinstallprompt', e => { e.preventDefault(); defPrompt = e; document.getElementById('install-btn').classList.remove('hidden'); });
+        document.getElementById('install-btn').onclick = () => { if(defPrompt) { defPrompt.prompt(); defPrompt = null; } };
+
+        // Fireworks
+        const can = document.getElementById('fireworks-canvas');
+        const ctx = can.getContext('2d');
+        let pts = [];
+        function startFireworks() { can.width = innerWidth; can.height = innerHeight; pts = []; ani(); }
+        function ani() {
+            if (!document.getElementById('screen-result').classList.contains('active')) return;
+            ctx.clearRect(0,0,can.width,can.height);
+            if (Math.random()<0.1) {
+                const x=Math.random()*can.width, y=Math.random()*can.height, c=`hsl(${Math.random()*360},100%,50%)`;
+                for(let i=0; i<15; i++) pts.push({x,y,vx:(Math.random()-0.5)*4,vy:(Math.random()-0.5)*4,c,a:1});
+            }
+            pts.forEach((p,i) => {
+                p.x+=p.vx; p.y+=p.vy; p.a-=0.02; ctx.globalAlpha=p.a; ctx.fillStyle=p.c;
+                ctx.beginPath(); ctx.arc(p.x,p.y,2,0,7); ctx.fill();
+                if(p.a<=0) pts.splice(i,1);
+            });
+            requestAnimationFrame(ani);
+        }
+    </script>
+</body>
+</html>
