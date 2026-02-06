@@ -170,6 +170,15 @@
             white-space: nowrap;
         }
 
+        .level-badge {
+            font-size: 0.5rem;
+            background: #3b82f6;
+            color: white;
+            padding: 1px 4px;
+            border-radius: 4px;
+            margin-top: 2px;
+        }
+
         .player-1 .player-name-label { color: #166534; }
         .player-2 .player-name-label { color: #991b1b; }
 
@@ -266,6 +275,7 @@
                 <div class="player-info-column">
                     <div class="avatar-emoji">🐶</div>
                     <div id="p1-name-display" class="player-name-label">Играч 1</div>
+                    <div id="p1-level" class="level-badge">Ниво 1</div>
                 </div>
             </div>
         </div>
@@ -293,6 +303,7 @@
                 <div class="player-info-column">
                     <div class="avatar-emoji">🐱</div>
                     <div id="p2-name-display" class="player-name-label">Играч 2</div>
+                    <div id="p2-level" class="level-badge">Ниво 1</div>
                 </div>
             </div>
             <div id="p2-ai-msg" class="hidden text-red-500 font-bold italic animate-pulse text-[10px] mt-1">Компютърът мисли...</div>
@@ -312,8 +323,8 @@
         const apiKey = "AIzaSyBRSiitoPDvEBMUnKb63AteGrkkUUKA1q4"; 
 
         let players = {
-            1: { name: 'Играч 1', score: 0, input: '', currentAns: 0 },
-            2: { name: 'Играч 2', score: 0, input: '', currentAns: 0, isAI: false }
+            1: { name: 'Играч 1', score: 0, input: '', currentAns: 0, level: 1, lastStartTime: 0 },
+            2: { name: 'Играч 2', score: 0, input: '', currentAns: 0, level: 1, lastStartTime: 0, isAI: false }
         };
         let gameSettings = { difficulty: 'simple', op: '*' };
         const WIN_SCORE = 10;
@@ -396,6 +407,8 @@
 
         function startGame() {
             players[1].score = 0; players[2].score = 0;
+            players[1].level = 1; players[2].level = 1;
+            updateUILevels();
             updateProgress();
             if (players[2].isAI) {
                 document.getElementById('p2-numpad').classList.add('hidden');
@@ -410,6 +423,11 @@
             if (players[2].isAI) triggerAI();
         }
 
+        function updateUILevels() {
+            document.getElementById('p1-level').innerText = `Ниво ${players[1].level}`;
+            document.getElementById('p2-level').innerText = `Ниво ${players[2].level}`;
+        }
+
         async function generateProblem(pId) {
             const qEl = document.getElementById(`p${pId}-question`);
             qEl.innerHTML = '<span class="loading-dots">Мисли</span>';
@@ -417,20 +435,26 @@
             document.getElementById(`p${pId}-input-display`).innerText = '';
 
             let q, ans;
+            const lvl = players[pId].level;
+            
             if (gameSettings.difficulty === 'simple') {
-                let a = Math.floor(Math.random()*8)+2;
-                let b = Math.floor(Math.random()*8)+2;
+                // Мащабиране на числата според нивото
+                let maxNum = 8 + (lvl * 2); 
+                let a = Math.floor(Math.random() * (maxNum - 2)) + 2;
+                let b = Math.floor(Math.random() * (maxNum - 2)) + 2;
+                
                 if (gameSettings.op === '*') { q = `${a} . ${b} = ?`; ans = a*b; }
                 else { q = `${a*b} ÷ ${a} = ?`; ans = b; }
             } else {
                 const opText = gameSettings.op === '*' ? 'умножение' : 'деление';
-                // Structured Prompt for clearer questions
-                const prompt = `Напиши 1 кратка текстова задача за ${opText} на български за деца. Структура: Опиши ситуацията, после задай конкретен въпрос. Пример: "Имам 20 ябълки за 4 деца. По колко ябълки се падат на дете?". Използвай '.' за умножение. Бъди ясен и конкретен. МАКС 75 знака. JSON: {"question": "...", "answer": число}`;
-                const res = await callGemini(prompt, "Ти си учител. Пиши задачи по схемата: Условие. Въпрос? Бъди МНОГО конкретен.");
+                // Промптът включва текущото ниво на трудност
+                const prompt = `Напиши 1 текстова задача за ${opText} за деца на ниво на трудност ${lvl} (където 1 е за първи клас, 5 е за четвърти). Структура: Опиши ситуацията, после задай конкретен въпрос. Пример: "Имам 20 ябълки за 4 деца. По колко ябълки се падат на дете?". Използвай '.' за умножение. Бъди ясен и конкретен. МАКС 75 знака. JSON: {"question": "...", "answer": число}`;
+                const res = await callGemini(prompt, `Ти си учител. Пиши задачи за Ниво ${lvl}. Бъди МНОГО конкретен.`);
                 if (res) { q = res.question; ans = res.answer; } 
                 else { q = "Грешка! Провери мрежата."; ans = 0; }
             }
             players[pId].currentAns = ans;
+            players[pId].lastStartTime = Date.now();
             qEl.innerText = q;
         }
 
@@ -449,15 +473,30 @@
         function checkAnswer(pId) {
             if (!gameActive || players[pId].input === '') return;
             const val = parseInt(players[pId].input);
+            const timeTaken = (Date.now() - players[pId].lastStartTime) / 1000;
             clearInput(pId);
+
             if (val === players[pId].currentAns) {
                 players[pId].score++; 
-                showFeedback(pId, "ВЯРНО! ✨", "#16a34a");
+                
+                // ДИНАМИЧНА ТРУДНОСТ: Ако е под 4 секунди, вдигаме нивото
+                if (timeTaken < 4) {
+                    players[pId].level++;
+                    showFeedback(pId, "БЪРЗО И ВЯРНО! 🚀", "#3b82f6");
+                } else {
+                    showFeedback(pId, "ВЯРНО! ✨", "#16a34a");
+                }
+                
+                updateUILevels();
                 updateProgress();
                 if (players[pId].score >= WIN_SCORE) return endGame(players[pId].name);
                 generateProblem(pId);
             } else {
+                // Ако сгреши, нивото пада с 1 (но не под 1)
+                players[pId].level = Math.max(1, players[pId].level - 1);
+                updateUILevels();
                 showFeedback(pId, `ГРЕШНО! (${players[pId].currentAns})`, "#dc2626");
+                generateProblem(pId); // Генерираме нова задача при грешка за динамика
             }
         }
 
@@ -468,7 +507,7 @@
             setTimeout(() => {
                 el.style.opacity = 0;
                 el.style.transform = "translateY(0)";
-            }, 1000);
+            }, 1200);
         }
 
         function updateProgress() {
@@ -521,7 +560,7 @@
         const can = document.getElementById('fireworks-canvas');
         const ctx = can.getContext('2d');
         let pts = [];
-        function startFireworks() { can.width = window.innerWidth; can.height = innerHeight; pts = []; ani(); }
+        function startFireworks() { can.width = window.innerWidth; can.height = window.innerHeight; pts = []; ani(); }
         function ani() {
             if (!document.getElementById('screen-result').classList.contains('active')) return;
             ctx.clearRect(0,0,can.width,can.height);
@@ -539,4 +578,3 @@
     </script>
 </body>
 </html>
-
