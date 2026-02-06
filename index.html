@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Математически Дуел ✨ Gemini</title>
     
-    <!-- PWA Настройки -->
+    <!-- PWA Настройки - КРИТИЧНО ЗА ИНСТАЛИРАНЕ -->
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#3b82f6">
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -149,7 +149,7 @@
             </div>
             <button onclick="goToSettings()" class="w-full bg-yellow-400 hover:bg-yellow-500 text-yellow-900 font-bold py-4 rounded-2xl text-xl shadow-lg transform active:scale-95 transition-all">НАПРЕД</button>
             
-            <!-- Бутон за инсталиране -->
+            <!-- БУТОН ЗА ИНСТАЛИРАНЕ -->
             <button id="install-btn" class="hidden mt-4 w-full border-2 border-purple-500 text-purple-600 font-bold py-2 rounded-xl text-xs uppercase hover:bg-purple-50 transition-colors">Инсталирай на телефона</button>
         </div>
     </div>
@@ -215,7 +215,7 @@
         </div>
     </div>
 
-    <!-- Екран Резултат -->
+    <!-- Резултат -->
     <div id="screen-result" class="screen bg-purple-700 text-white p-6 relative">
         <canvas id="fireworks-canvas" class="absolute inset-0 pointer-events-none"></canvas>
         <div class="z-10 text-center">
@@ -403,7 +403,9 @@
 
         function resetGame() { switchScreen('screen-start'); }
 
-        // PWA Регистрация и Логика
+        // --- PWA ЛОГИКА ЗА ИНСТАЛИРАНЕ ---
+        
+        // 1. Регистрация на Service Worker (ред 262)
         if ('serviceWorker' in navigator && (window.location.protocol === 'http:' || window.location.protocol === 'https:')) {
             window.addEventListener('load', () => { 
                 navigator.serviceWorker.register('./sw.js').catch((err) => {
@@ -412,18 +414,25 @@
             });
         }
         
+        // 2. Слушател за събитието за инсталиране (ред 272)
         let defPrompt;
         window.addEventListener('beforeinstallprompt', e => { 
+            // Спира автоматичното показване на системния банер
             e.preventDefault(); 
+            // Запазва събитието, за да го извикаме по-късно
             defPrompt = e; 
+            // Показва нашия скрит бутон "Инсталирай на телефона"
             document.getElementById('install-btn').classList.remove('hidden'); 
         });
 
+        // 3. Логика при клик на бутона (ред 282)
         document.getElementById('install-btn').onclick = () => { 
             if(defPrompt) { 
+                // Извиква системния прозорец за инсталация
                 defPrompt.prompt(); 
                 defPrompt.userChoice.then((choiceResult) => {
                     if (choiceResult.outcome === 'accepted') {
+                        console.log('User accepted the install prompt');
                         document.getElementById('install-btn').classList.add('hidden');
                     }
                     defPrompt = null; 
@@ -453,3 +462,4 @@
     </script>
 </body>
 </html>
+
