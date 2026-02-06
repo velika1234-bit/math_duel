@@ -171,12 +171,20 @@
         }
 
         .level-badge {
-            font-size: 0.5rem;
+            font-size: 0.55rem;
             background: #3b82f6;
             color: white;
-            padding: 1px 4px;
-            border-radius: 4px;
-            margin-top: 2px;
+            padding: 2px 6px;
+            border-radius: 20px;
+            margin-top: 4px;
+            font-weight: bold;
+            box-shadow: 0 2px 4px rgba(59, 130, 246, 0.3);
+            animation: popIn 0.3s ease-out;
+        }
+
+        @keyframes popIn {
+            0% { transform: scale(0.5); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
         }
 
         .player-1 .player-name-label { color: #166534; }
@@ -214,8 +222,25 @@
             text-align: center;
         }
 
-        .loading-dots:after { content: '.'; animation: dots 1.5s steps(5, end) infinite; }
-        @keyframes dots { 0%, 20% { content: '.'; } 40% { content: '..'; } 60% { content: '...'; } 80%, 100% { content: ''; } }
+        .op-btn {
+            width: 50px;
+            height: 50px;
+            border-radius: 12px;
+            font-weight: bold;
+            font-size: 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+            background: white;
+            color: #3b82f6;
+            border: 2px solid #3b82f6;
+        }
+
+        .op-btn.active-op {
+            background: #3b82f6;
+            color: white;
+        }
     </style>
 </head>
 <body>
@@ -240,21 +265,25 @@
     </div>
 
     <div id="screen-settings" class="screen bg-blue-50 p-4">
-        <h2 class="text-2xl font-bold mb-8 text-blue-800">Настройки</h2>
+        <h2 class="text-2xl font-bold mb-8 text-blue-800 text-center">Избери тип задачи</h2>
         <div class="grid grid-cols-2 gap-4 w-full max-w-sm">
             <div id="card-simple" class="bg-white p-5 rounded-3xl shadow-md border-4 border-blue-400 cursor-pointer text-center" onclick="selectDifficulty('simple')">
                 <div class="text-4xl">🔢</div>
-                <h3 class="text-sm font-bold mt-2">Таблица</h3>
+                <h3 class="text-sm font-bold mt-2">Действия</h3>
             </div>
             <div id="card-hard" class="bg-white p-5 rounded-3xl shadow-md border-4 border-transparent cursor-pointer text-center" onclick="selectDifficulty('hard')">
-                <div class="text-4xl">✨</div>
-                <h3 class="text-sm font-bold mt-2">ИИ Задачи</h3>
+                <div class="text-4xl">📚</div>
+                <h3 class="text-sm font-bold mt-2">Логика</h3>
             </div>
         </div>
-        <div class="flex gap-6 mt-8">
-            <button onclick="selectOp('*')" id="op-mult" class="op-btn bg-blue-400 text-white px-10 py-3 rounded-2xl border-2 border-blue-400 font-bold transition-all text-xl">.</button>
-            <button onclick="selectOp('/')" id="op-div" class="op-btn bg-white text-blue-600 px-10 py-3 rounded-2xl border-2 border-blue-400 font-bold transition-all text-xl">÷</button>
+        
+        <div class="grid grid-cols-4 gap-3 mt-8 w-full max-w-sm px-4">
+            <button onclick="selectOp('+')" id="op-add" class="op-btn">+</button>
+            <button onclick="selectOp('-')" id="op-sub" class="op-btn">-</button>
+            <button onclick="selectOp('*')" id="op-mult" class="op-btn active-op">.</button>
+            <button onclick="selectOp('/')" id="op-div" class="op-btn">÷</button>
         </div>
+
         <button onclick="startGame()" class="mt-10 bg-green-500 text-white px-16 py-4 rounded-3xl text-xl font-bold shadow-lg hover:bg-green-600 transform active:scale-95 transition-all uppercase tracking-wide">СТАРТ</button>
     </div>
 
@@ -306,7 +335,7 @@
                     <div id="p2-level" class="level-badge">Ниво 1</div>
                 </div>
             </div>
-            <div id="p2-ai-msg" class="hidden text-red-500 font-bold italic animate-pulse text-[10px] mt-1">Компютърът мисли...</div>
+            <div id="p2-ai-msg" class="hidden text-red-500 font-bold italic animate-pulse text-[10px] mt-1">Роботът пресмята...</div>
         </div>
     </div>
 
@@ -320,8 +349,6 @@
     </div>
 
     <script>
-        const apiKey = "AIzaSyBRSiitoPDvEBMUnKb63AteGrkkUUKA1q4"; 
-
         let players = {
             1: { name: 'Играч 1', score: 0, input: '', currentAns: 0, level: 1, lastStartTime: 0 },
             2: { name: 'Играч 2', score: 0, input: '', currentAns: 0, level: 1, lastStartTime: 0, isAI: false }
@@ -330,41 +357,41 @@
         const WIN_SCORE = 10;
         let gameActive = false;
 
+        const names = ["Мила", "Ники", "Ани", "Виктор", "Тео", "Ели", "Марти"];
+        const objects = ["ябълки", "колички", "моливи", "топки", "стикери", "бонбони", "круши"];
+        
+        const problemTemplates = {
+            "+": [
+                "${name} имаше ${a} ${item}. Получи още ${b} от приятел. Колко има сега?",
+                "В една кутия има ${a} ${item}, а в друга - ${b}. Колко са общо?",
+                "${name} намери ${a} ${item} сутринта и ${b} следобед. Колко ${item} намери общо?",
+                "На масата има ${a} червени ${item} и ${b} зелени. Колко са всичко?"
+            ],
+            "-": [
+                "${name} имаше ${total} ${item}. Даде ${b} на сестра си. Колко му останаха?",
+                "В кошница имаше ${total} ${item}. Извадиха ${b} от тях. Колко останаха?",
+                "${name} трябваше да реши ${total} задачи, но реши само ${b}. Колко му остават?",
+                "Имах ${total} ${item}, но загубих ${b}. Колко ${item} имам сега?"
+            ],
+            "*": [
+                "${name} има ${a} кутии. Във всяка кутия има по ${b} ${item}. Колко са общо?",
+                "${name} купи ${a} пакета ${item}. Във всеки има ${b} броя. Колко ${item} има?",
+                "На ${a} приятели дадох по ${b} ${item}. Колко ${item} раздадох общо?",
+                "${name} нареди ${a} реда с по ${b} ${item} на ред. Колко са всичко?"
+            ],
+            "/": [
+                "${name} има ${total} ${item} и ги раздели на ${a} деца. По колко има за всяко?",
+                "${name} разпредели ${total} ${item} в ${a} кутии. По колко са в кутия?",
+                "Имаме ${total} ${item}. Ако сложим по ${b} в пакет, колко пакета ни трябват?",
+                "Раздели ${total} ${item} на ${a} равни групи. Колко има във всяка група?"
+            ]
+        };
+
         function updateAppHeight() {
             document.documentElement.style.setProperty('--app-height', `${window.innerHeight}px`);
         }
         window.addEventListener('resize', updateAppHeight);
         updateAppHeight();
-
-        async function fetchWithRetry(url, options, retries = 5, backoff = 1000) {
-            try {
-                const response = await fetch(url, options);
-                if (!response.ok) throw new Error('API Error');
-                return await response.json();
-            } catch (error) {
-                if (retries === 0) throw error;
-                await new Promise(resolve => setTimeout(resolve, backoff));
-                return fetchWithRetry(url, options, retries - 1, backoff * 2);
-            }
-        }
-
-        async function callGemini(prompt, sys = "Ти си учител по математика за малки деца. Отговаряй винаги с JSON.") {
-            if (!apiKey) return null;
-            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
-            try {
-                const data = await fetchWithRetry(url, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        contents: [{ parts: [{ text: prompt }] }],
-                        systemInstruction: { parts: [{ text: sys }] },
-                        generationConfig: { responseMimeType: "application/json" }
-                    })
-                });
-                const content = data.candidates?.[0]?.content?.parts?.[0]?.text;
-                return content ? JSON.parse(content) : null;
-            } catch (e) { return null; }
-        }
 
         function goToSettings() {
             players[1].name = document.getElementById('p1-name').value || 'Играч 1';
@@ -394,15 +421,9 @@
 
         function selectOp(op) {
             gameSettings.op = op;
-            const multBtn = document.getElementById('op-mult');
-            const divBtn = document.getElementById('op-div');
-            if (op === '*') {
-                multBtn.className = 'op-btn bg-blue-400 text-white px-10 py-3 rounded-2xl border-2 border-blue-400 font-bold text-xl';
-                divBtn.className = 'op-btn bg-white text-blue-600 px-10 py-3 rounded-2xl border-2 border-blue-400 font-bold text-xl';
-            } else {
-                multBtn.className = 'op-btn bg-white text-blue-600 px-10 py-3 rounded-2xl border-2 border-blue-400 font-bold text-xl';
-                divBtn.className = 'op-btn bg-blue-400 text-white px-10 py-3 rounded-2xl border-2 border-blue-400 font-bold text-xl';
-            }
+            const ids = { '+': 'op-add', '-': 'op-sub', '*': 'op-mult', '/': 'op-div' };
+            document.querySelectorAll('.op-btn').forEach(btn => btn.classList.remove('active-op'));
+            document.getElementById(ids[op]).classList.add('active-op');
         }
 
         function startGame() {
@@ -428,30 +449,43 @@
             document.getElementById('p2-level').innerText = `Ниво ${players[2].level}`;
         }
 
-        async function generateProblem(pId) {
+        function generateProblem(pId) {
             const qEl = document.getElementById(`p${pId}-question`);
-            qEl.innerHTML = '<span class="loading-dots">Мисли</span>';
             players[pId].input = '';
             document.getElementById(`p${pId}-input-display`).innerText = '';
 
             let q, ans;
             const lvl = players[pId].level;
+            const op = gameSettings.op;
             
-            if (gameSettings.difficulty === 'simple') {
-                // Мащабиране на числата според нивото
-                let maxNum = 8 + (lvl * 2); 
-                let a = Math.floor(Math.random() * (maxNum - 2)) + 2;
-                let b = Math.floor(Math.random() * (maxNum - 2)) + 2;
-                
-                if (gameSettings.op === '*') { q = `${a} . ${b} = ?`; ans = a*b; }
-                else { q = `${a*b} ÷ ${a} = ?`; ans = b; }
+            let a, b;
+            if (op === '+' || op === '-') {
+                a = Math.floor(Math.random() * (5 + lvl * 5)) + 2;
+                b = Math.floor(Math.random() * (5 + lvl * 5)) + 2;
             } else {
-                const opText = gameSettings.op === '*' ? 'умножение' : 'деление';
-                // Промптът включва текущото ниво на трудност
-                const prompt = `Напиши 1 текстова задача за ${opText} за деца на ниво на трудност ${lvl} (където 1 е за първи клас, 5 е за четвърти). Структура: Опиши ситуацията, после задай конкретен въпрос. Пример: "Имам 20 ябълки за 4 деца. По колко ябълки се падат на дете?". Използвай '.' за умножение. Бъди ясен и конкретен. МАКС 75 знака. JSON: {"question": "...", "answer": число}`;
-                const res = await callGemini(prompt, `Ти си учител. Пиши задачи за Ниво ${lvl}. Бъди МНОГО конкретен.`);
-                if (res) { q = res.question; ans = res.answer; } 
-                else { q = "Грешка! Провери мрежата."; ans = 0; }
+                a = Math.floor(Math.random() * (2 + lvl)) + 2;
+                b = Math.floor(Math.random() * (2 + lvl)) + 2;
+            }
+
+            if (gameSettings.difficulty === 'simple') {
+                switch(op) {
+                    case '+': q = `${a} + ${b} = ?`; ans = a + b; break;
+                    case '-': if(a < b) [a, b] = [b, a]; q = `${a} - ${b} = ?`; ans = a - b; break;
+                    case '*': q = `${a} . ${b} = ?`; ans = a * b; break;
+                    case '/': q = `${a*b} ÷ ${a} = ?`; ans = b; break;
+                }
+            } else {
+                const templates = problemTemplates[op];
+                const template = templates[Math.floor(Math.random() * templates.length)];
+                const name = names[Math.floor(Math.random() * names.length)];
+                const item = objects[Math.floor(Math.random() * objects.length)];
+                
+                switch(op) {
+                    case '+': ans = a + b; q = template.replace("${name}", name).replace("${a}", a).replace("${b}", b).replace(/\${item}/g, item); break;
+                    case '-': if(a < b) [a, b] = [b, a]; ans = a - b; q = template.replace("${name}", name).replace("${total}", a).replace("${b}", b).replace(/\${item}/g, item); break;
+                    case '*': ans = a * b; q = template.replace("${name}", name).replace("${a}", a).replace("${b}", b).replace(/\${item}/g, item); break;
+                    case '/': ans = b; q = template.replace("${name}", name).replace("${total}", a*b).replace("${a}", a).replace("${b}", b).replace(/\${item}/g, item); break;
+                }
             }
             players[pId].currentAns = ans;
             players[pId].lastStartTime = Date.now();
@@ -478,25 +512,21 @@
 
             if (val === players[pId].currentAns) {
                 players[pId].score++; 
-                
-                // ДИНАМИЧНА ТРУДНОСТ: Ако е под 4 секунди, вдигаме нивото
-                if (timeTaken < 4) {
+                if (timeTaken < 5) {
                     players[pId].level++;
                     showFeedback(pId, "БЪРЗО И ВЯРНО! 🚀", "#3b82f6");
                 } else {
                     showFeedback(pId, "ВЯРНО! ✨", "#16a34a");
                 }
-                
                 updateUILevels();
                 updateProgress();
                 if (players[pId].score >= WIN_SCORE) return endGame(players[pId].name);
                 generateProblem(pId);
             } else {
-                // Ако сгреши, нивото пада с 1 (но не под 1)
                 players[pId].level = Math.max(1, players[pId].level - 1);
                 updateUILevels();
                 showFeedback(pId, `ГРЕШНО! (${players[pId].currentAns})`, "#dc2626");
-                generateProblem(pId); // Генерираме нова задача при грешка за динамика
+                generateProblem(pId);
             }
         }
 
@@ -522,7 +552,7 @@
                 players[2].input = players[2].currentAns.toString();
                 checkAnswer(2);
                 if (gameActive) triggerAI();
-            }, 7000 + Math.random()*5000);
+            }, 5000 + Math.random()*5000);
         }
 
         function endGame(w) {
@@ -531,31 +561,6 @@
         }
 
         function resetGame() { switchScreen('screen-start'); }
-
-        // --- PWA LOGIC ---
-        if ('serviceWorker' in navigator && (window.location.protocol === 'http:' || window.location.protocol === 'https:')) {
-            window.addEventListener('load', () => { 
-                navigator.serviceWorker.register('./sw.js').then(reg => reg.update()).catch(() => {}); 
-            });
-        }
-        
-        let deferredPrompt;
-        window.addEventListener('beforeinstallprompt', (e) => {
-            e.preventDefault();
-            deferredPrompt = e;
-            document.getElementById('install-btn').classList.remove('hidden');
-        });
-
-        document.getElementById('install-btn').onclick = async () => {
-            if (deferredPrompt) {
-                deferredPrompt.prompt();
-                const { outcome } = await deferredPrompt.userChoice;
-                if (outcome === 'accepted') document.getElementById('install-btn').classList.add('hidden');
-                deferredPrompt = null;
-            } else {
-                alert("За да инсталирате:\n1. Натиснете бутона с 3 точки (горе вдясно).\n2. Изберете 'Инсталиране на приложение' или 'Добавяне към начален екран'.");
-            }
-        };
 
         const can = document.getElementById('fireworks-canvas');
         const ctx = can.getContext('2d');
@@ -578,3 +583,4 @@
     </script>
 </body>
 </html>
+
