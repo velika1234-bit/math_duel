@@ -45,7 +45,6 @@
 
         .active { display: flex; }
 
-        /* Player containers */
         .player-area {
             flex: 1;
             width: 100%;
@@ -86,17 +85,15 @@
         .progress-p1 { background: #22c55e; }
         .progress-p2 { background: #ef4444; }
 
-        /* Compact Layout: Input | Numpad | Player Info */
         .input-numpad-container {
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 8px; /* Brought closer together */
+            gap: 8px;
             width: 100%;
             margin-bottom: 0.5vh;
         }
 
-        /* Container for Input + Feedback on top */
         .input-wrapper {
             position: relative;
             display: flex;
@@ -147,7 +144,6 @@
         .num-btn.confirm { background: #22c55e; color: white; box-shadow: 0 3px 0 #16a34a; }
         .num-btn.clear { background: #f97316; color: white; box-shadow: 0 3px 0 #ea580c; }
 
-        /* Player Info Section */
         .player-info-column {
             display: flex;
             flex-direction: column;
@@ -192,21 +188,21 @@
             white-space: nowrap;
         }
 
-        /* Question Box Constraint */
         .question-box {
-            padding: 6px 10px;
-            line-height: 1.2;
+            padding: 6px 12px;
+            line-height: 1.25;
             width: 90%;
-            max-height: 3.5rem; 
+            max-height: 4.2rem; 
             overflow-y: auto;
             background: white;
             border-radius: 12px;
             box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-            font-size: 0.8rem;
+            font-size: 0.82rem;
             display: flex;
             align-items: center;
             justify-content: center;
             flex-shrink: 0;
+            text-align: center;
         }
 
         .loading-dots:after { content: '.'; animation: dots 1.5s steps(5, end) infinite; }
@@ -215,7 +211,6 @@
 </head>
 <body>
 
-    <!-- Screen 1: Login -->
     <div id="screen-start" class="screen active bg-gradient-to-b from-blue-400 to-blue-600 text-white p-4">
         <h1 class="text-3xl font-bold mb-6 text-center">Математически Дуел ✨</h1>
         <div class="bg-white p-6 rounded-3xl shadow-2xl text-gray-800 w-full max-w-sm">
@@ -231,11 +226,10 @@
                 </div>
             </div>
             <button onclick="goToSettings()" class="w-full bg-yellow-400 hover:bg-yellow-500 text-yellow-900 font-bold py-4 rounded-2xl text-xl shadow-lg transform active:scale-95 transition-all">НАПРЕД</button>
-            <button id="install-btn" class="hidden mt-4 w-full border-2 border-purple-500 text-purple-600 font-bold py-2 rounded-xl text-xs uppercase hover:bg-purple-50 transition-colors">Инсталирай на телефона</button>
+            <button id="install-btn" class="hidden mt-4 w-full border-2 border-green-500 text-green-600 font-bold py-2 rounded-xl text-xs uppercase hover:bg-green-50 transition-colors">Инсталирай на телефона</button>
         </div>
     </div>
 
-    <!-- Screen 2: Settings -->
     <div id="screen-settings" class="screen bg-blue-50 p-4">
         <h2 class="text-2xl font-bold mb-8 text-blue-800">Настройки</h2>
         <div class="grid grid-cols-2 gap-4 w-full max-w-sm">
@@ -255,9 +249,7 @@
         <button onclick="startGame()" class="mt-10 bg-green-500 text-white px-16 py-4 rounded-3xl text-xl font-bold shadow-lg hover:bg-green-600 transform active:scale-95 transition-all uppercase tracking-wide">СТАРТ</button>
     </div>
 
-    <!-- Screen 3: Game -->
     <div id="screen-game" class="screen">
-        <!-- PLAYER 1 (Top, Rotated) -->
         <div class="player-area player-1" id="p1-area">
             <div class="bg-white question-box" id="p1-question">...</div>
             <div class="input-numpad-container">
@@ -285,7 +277,6 @@
             </div>
         </div>
 
-        <!-- PLAYER 2 (Bottom) -->
         <div class="player-area player-2" id="p2-area">
             <div class="bg-white question-box" id="p2-question">...</div>
             <div class="input-numpad-container">
@@ -308,7 +299,6 @@
         </div>
     </div>
 
-    <!-- Screen Result -->
     <div id="screen-result" class="screen bg-purple-700 text-white p-6 relative">
         <canvas id="fireworks-canvas" class="absolute inset-0 pointer-events-none"></canvas>
         <div class="z-10 text-center">
@@ -347,7 +337,7 @@
             }
         }
 
-        async function callGemini(prompt, sys = "Ти си учител по математика. Отговаряй винаги с JSON.") {
+        async function callGemini(prompt, sys = "Ти си учител по математика за малки деца. Отговаряй винаги с JSON.") {
             if (!apiKey) return null;
             const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
             try {
@@ -433,8 +423,10 @@
                 if (gameSettings.op === '*') { q = `${a} . ${b} = ?`; ans = a*b; }
                 else { q = `${a*b} ÷ ${a} = ?`; ans = b; }
             } else {
-                const prompt = `Напиши 1 МНОГО КРАТКА текстова задача (МАКС 50 ЗНАКА) за ${gameSettings.op === '*' ? 'умножение' : 'деление'} на български. JSON: {"question": "...", "answer": число}`;
-                const res = await callGemini(prompt, "Ти си учител. Пиши задачи до 2 реда. Използвай '.' за умножение.");
+                const opText = gameSettings.op === '*' ? 'умножение' : 'деление';
+                // Structured Prompt for clearer questions
+                const prompt = `Напиши 1 кратка текстова задача за ${opText} на български за деца. Структура: Опиши ситуацията, после задай конкретен въпрос. Пример: "Имам 20 ябълки за 4 деца. По колко ябълки се падат на дете?". Използвай '.' за умножение. Бъди ясен и конкретен. МАКС 75 знака. JSON: {"question": "...", "answer": число}`;
+                const res = await callGemini(prompt, "Ти си учител. Пиши задачи по схемата: Условие. Въпрос? Бъди МНОГО конкретен.");
                 if (res) { q = res.question; ans = res.answer; } 
                 else { q = "Грешка! Провери мрежата."; ans = 0; }
             }
@@ -503,27 +495,33 @@
 
         // --- PWA LOGIC ---
         if ('serviceWorker' in navigator && (window.location.protocol === 'http:' || window.location.protocol === 'https:')) {
-            window.addEventListener('load', () => { navigator.serviceWorker.register('./sw.js').catch(() => {}); });
+            window.addEventListener('load', () => { 
+                navigator.serviceWorker.register('./sw.js').then(reg => reg.update()).catch(() => {}); 
+            });
         }
         
-        let defPrompt;
-        window.addEventListener('beforeinstallprompt', e => { 
-            e.preventDefault(); 
-            defPrompt = e; 
-            document.getElementById('install-btn').classList.remove('hidden'); 
+        let deferredPrompt;
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            document.getElementById('install-btn').classList.remove('hidden');
         });
 
-        document.getElementById('install-btn').onclick = () => { 
-            if(defPrompt) { 
-                defPrompt.prompt(); 
-                defPrompt.userChoice.then((res) => { if (res.outcome === 'accepted') document.getElementById('install-btn').classList.add('hidden'); defPrompt = null; });
-            } 
+        document.getElementById('install-btn').onclick = async () => {
+            if (deferredPrompt) {
+                deferredPrompt.prompt();
+                const { outcome } = await deferredPrompt.userChoice;
+                if (outcome === 'accepted') document.getElementById('install-btn').classList.add('hidden');
+                deferredPrompt = null;
+            } else {
+                alert("За да инсталирате:\n1. Натиснете бутона с 3 точки (горе вдясно).\n2. Изберете 'Инсталиране на приложение' или 'Добавяне към начален екран'.");
+            }
         };
 
         const can = document.getElementById('fireworks-canvas');
         const ctx = can.getContext('2d');
         let pts = [];
-        function startFireworks() { can.width = innerWidth; can.height = innerHeight; pts = []; ani(); }
+        function startFireworks() { can.width = window.innerWidth; can.height = innerHeight; pts = []; ani(); }
         function ani() {
             if (!document.getElementById('screen-result').classList.contains('active')) return;
             ctx.clearRect(0,0,can.width,can.height);
@@ -541,3 +539,4 @@
     </script>
 </body>
 </html>
+
