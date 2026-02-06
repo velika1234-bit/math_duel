@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Математически Дуел ✨ Gemini</title>
     
-    <!-- PWA Настройки -->
+    <!-- PWA Settings -->
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#3b82f6">
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -45,24 +45,24 @@
 
         .active { display: flex; }
 
-        /* Динамични контейнери за играчите */
+        /* Player containers */
         .player-area {
             flex: 1;
             width: 100%;
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: center;
-            padding: 1vh;
+            justify-content: space-around; 
+            padding: 1vh 2vw;
             position: relative;
-            min-height: 0; /* Важно за flex контейнери */
+            min-height: 0; 
         }
 
         .player-1 { background-color: #dcfce7; transform: rotate(180deg); }
         .player-2 { background-color: #fee2e2; }
 
         .divider {
-            height: 40px;
+            height: 36px;
             width: 100%;
             background: #3b82f6;
             display: flex;
@@ -75,7 +75,7 @@
 
         .progress-container {
             width: 80%;
-            height: 14px;
+            height: 12px;
             background: rgba(255,255,255,0.3);
             border-radius: 10px;
             overflow: hidden;
@@ -86,72 +86,136 @@
         .progress-p1 { background: #22c55e; }
         .progress-p2 { background: #ef4444; }
 
-        /* Мащабируема клавиатура */
-        .numpad {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 1vh;
-            max-width: 80vw;
-            margin-top: 1vh;
-        }
-
-        .num-btn {
-            width: 12vw;
-            max-width: 50px;
-            height: 8vh;
-            max-height: 45px;
-            background: white;
-            border-radius: 8px;
+        /* Compact Layout: Input | Numpad | Player Info */
+        .input-numpad-container {
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 1.2rem;
+            gap: 8px; /* Brought closer together */
+            width: 100%;
+            margin-bottom: 0.5vh;
+        }
+
+        /* Container for Input + Feedback on top */
+        .input-wrapper {
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .input-display-box {
+            width: 60px;
+            height: 50px;
+            background: white;
+            border: 3px solid #cbd5e1;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
             font-weight: bold;
-            box-shadow: 0 4px 0 #cbd5e1;
+            color: #334155;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.05);
+            z-index: 10;
+        }
+
+        .player-1 .input-display-box { color: #166534; border-color: #86efac; }
+        .player-2 .input-display-box { color: #991b1b; border-color: #fca5a5; }
+
+        .numpad {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 4px;
+        }
+
+        .num-btn {
+            width: 40px;
+            height: 36px;
+            background: white;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.9rem;
+            font-weight: bold;
+            box-shadow: 0 3px 0 #cbd5e1;
             cursor: pointer;
         }
 
         .num-btn:active { transform: translateY(2px); box-shadow: 0 1px 0 #cbd5e1; }
-        .num-btn.confirm { background: #22c55e; color: white; box-shadow: 0 4px 0 #16a34a; }
-        .num-btn.clear { background: #f97316; color: white; box-shadow: 0 4px 0 #ea580c; }
+        .num-btn.confirm { background: #22c55e; color: white; box-shadow: 0 3px 0 #16a34a; }
+        .num-btn.clear { background: #f97316; color: white; box-shadow: 0 3px 0 #ea580c; }
 
-        .avatar { 
-            width: 10vh; 
-            max-width: 60px; 
-            height: 10vh; 
-            max-height: 60px; 
-            border-radius: 50%; 
-            border: 3px solid white; 
+        /* Player Info Section */
+        .player-info-column {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            margin-left: 4px;
+            width: 65px;
         }
+
+        .avatar-emoji { 
+            font-size: 2rem;
+            line-height: 1;
+            margin-bottom: 2px;
+        }
+
+        .player-name-label {
+            font-size: 0.6rem;
+            font-weight: bold;
+            color: #475569;
+            text-align: center;
+            width: 100%;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .player-1 .player-name-label { color: #166534; }
+        .player-2 .player-name-label { color: #991b1b; }
 
         .feedback {
             position: absolute;
+            bottom: 110%; 
+            left: 0;
+            right: 0;
             font-weight: bold;
-            font-size: 1.5rem;
+            font-size: 0.9rem;
             pointer-events: none;
             opacity: 0;
-            transition: all 0.4s ease;
+            transition: all 0.3s ease;
             text-align: center;
-            z-index: 100;
+            z-index: 20;
+            white-space: nowrap;
+        }
+
+        /* Question Box Constraint */
+        .question-box {
+            padding: 6px 10px;
+            line-height: 1.2;
+            width: 90%;
+            max-height: 3.5rem; 
+            overflow-y: auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            font-size: 0.8rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
         }
 
         .loading-dots:after { content: '.'; animation: dots 1.5s steps(5, end) infinite; }
         @keyframes dots { 0%, 20% { content: '.'; } 40% { content: '..'; } 60% { content: '...'; } 80%, 100% { content: ''; } }
-
-        .question-box {
-            padding: 1vh 2vw;
-            line-height: 1.1;
-            max-width: 90%;
-            background: white;
-            border-radius: 12px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-            font-size: 0.9rem;
-        }
     </style>
 </head>
 <body>
 
-    <!-- Екран 1: Вход -->
+    <!-- Screen 1: Login -->
     <div id="screen-start" class="screen active bg-gradient-to-b from-blue-400 to-blue-600 text-white p-4">
         <h1 class="text-3xl font-bold mb-6 text-center">Математически Дуел ✨</h1>
         <div class="bg-white p-6 rounded-3xl shadow-2xl text-gray-800 w-full max-w-sm">
@@ -167,12 +231,11 @@
                 </div>
             </div>
             <button onclick="goToSettings()" class="w-full bg-yellow-400 hover:bg-yellow-500 text-yellow-900 font-bold py-4 rounded-2xl text-xl shadow-lg transform active:scale-95 transition-all">НАПРЕД</button>
-            
-            <button id="install-btn" class="hidden mt-4 w-full border-2 border-purple-500 text-purple-600 font-bold py-3 rounded-xl text-xs uppercase hover:bg-purple-50 transition-colors">Инсталирай на телефона</button>
+            <button id="install-btn" class="hidden mt-4 w-full border-2 border-purple-500 text-purple-600 font-bold py-2 rounded-xl text-xs uppercase hover:bg-purple-50 transition-colors">Инсталирай на телефона</button>
         </div>
     </div>
 
-    <!-- Екран 2: Настройки -->
+    <!-- Screen 2: Settings -->
     <div id="screen-settings" class="screen bg-blue-50 p-4">
         <h2 class="text-2xl font-bold mb-8 text-blue-800">Настройки</h2>
         <div class="grid grid-cols-2 gap-4 w-full max-w-sm">
@@ -186,24 +249,32 @@
             </div>
         </div>
         <div class="flex gap-6 mt-8">
-            <button onclick="selectOp('*')" id="op-mult" class="op-btn bg-blue-400 text-white px-10 py-3 rounded-2xl border-2 border-blue-400 font-bold transition-all text-xl">×</button>
+            <button onclick="selectOp('*')" id="op-mult" class="op-btn bg-blue-400 text-white px-10 py-3 rounded-2xl border-2 border-blue-400 font-bold transition-all text-xl">.</button>
             <button onclick="selectOp('/')" id="op-div" class="op-btn bg-white text-blue-600 px-10 py-3 rounded-2xl border-2 border-blue-400 font-bold transition-all text-xl">÷</button>
         </div>
         <button onclick="startGame()" class="mt-10 bg-green-500 text-white px-16 py-4 rounded-3xl text-xl font-bold shadow-lg hover:bg-green-600 transform active:scale-95 transition-all uppercase tracking-wide">СТАРТ</button>
     </div>
 
-    <!-- Екран 3: Игра -->
+    <!-- Screen 3: Game -->
     <div id="screen-game" class="screen">
+        <!-- PLAYER 1 (Top, Rotated) -->
         <div class="player-area player-1" id="p1-area">
-            <div id="p1-feedback" class="feedback"></div>
-            <img src="https://api.dicebear.com/7.x/adventurer/svg?seed=Buddy&backgroundColor=b6e3f4" alt="Dog" class="avatar">
-            <div class="bg-white px-4 py-2 rounded-2xl shadow-sm text-sm font-bold text-center w-[92%] flex items-center justify-center question-box" id="p1-question">...</div>
-            <div class="text-2xl font-bold text-green-600 h-8" id="p1-input-display"></div>
-            <div class="numpad">
-                <div class="num-btn" onclick="addNum(1, 1)">1</div><div class="num-btn" onclick="addNum(1, 2)">2</div><div class="num-btn" onclick="addNum(1, 3)">3</div>
-                <div class="num-btn" onclick="addNum(1, 4)">4</div><div class="num-btn" onclick="addNum(1, 5)">5</div><div class="num-btn" onclick="addNum(1, 6)">6</div>
-                <div class="num-btn" onclick="addNum(1, 7)">7</div><div class="num-btn" onclick="addNum(1, 8)">8</div><div class="num-btn" onclick="addNum(1, 9)">9</div>
-                <div class="num-btn clear" onclick="clearInput(1)">C</div><div class="num-btn" onclick="addNum(1, 0)">0</div><div class="num-btn confirm" onclick="checkAnswer(1)">✔</div>
+            <div class="bg-white question-box" id="p1-question">...</div>
+            <div class="input-numpad-container">
+                <div class="input-wrapper">
+                    <div id="p1-feedback" class="feedback"></div>
+                    <div class="input-display-box" id="p1-input-display"></div>
+                </div>
+                <div class="numpad">
+                    <div class="num-btn" onclick="addNum(1, 1)">1</div><div class="num-btn" onclick="addNum(1, 2)">2</div><div class="num-btn" onclick="addNum(1, 3)">3</div>
+                    <div class="num-btn" onclick="addNum(1, 4)">4</div><div class="num-btn" onclick="addNum(1, 5)">5</div><div class="num-btn" onclick="addNum(1, 6)">6</div>
+                    <div class="num-btn" onclick="addNum(1, 7)">7</div><div class="num-btn" onclick="addNum(1, 8)">8</div><div class="num-btn" onclick="addNum(1, 9)">9</div>
+                    <div class="num-btn clear" onclick="clearInput(1)">C</div><div class="num-btn" onclick="addNum(1, 0)">0</div><div class="num-btn confirm" onclick="checkAnswer(1)">✔</div>
+                </div>
+                <div class="player-info-column">
+                    <div class="avatar-emoji">🐶</div>
+                    <div id="p1-name-display" class="player-name-label">Играч 1</div>
+                </div>
             </div>
         </div>
 
@@ -214,22 +285,30 @@
             </div>
         </div>
 
+        <!-- PLAYER 2 (Bottom) -->
         <div class="player-area player-2" id="p2-area">
-            <div id="p2-feedback" class="feedback"></div>
-            <img src="https://api.dicebear.com/7.x/adventurer/svg?seed=Kitty&backgroundColor=ffd5dc" alt="Cat" class="avatar">
-            <div class="bg-white px-4 py-2 rounded-2xl shadow-sm text-sm font-bold text-center w-[92%] flex items-center justify-center question-box" id="p2-question">...</div>
-            <div class="text-2xl font-bold text-red-600 h-8" id="p2-input-display"></div>
-            <div class="numpad" id="p2-numpad">
-                <div class="num-btn" onclick="addNum(2, 1)">1</div><div class="num-btn" onclick="addNum(2, 2)">2</div><div class="num-btn" onclick="addNum(2, 3)">3</div>
-                <div class="num-btn" onclick="addNum(2, 4)">4</div><div class="num-btn" onclick="addNum(2, 5)">5</div><div class="num-btn" onclick="addNum(2, 6)">6</div>
-                <div class="num-btn" onclick="addNum(2, 7)">7</div><div class="num-btn" onclick="addNum(2, 8)">8</div><div class="num-btn" onclick="addNum(2, 9)">9</div>
-                <div class="num-btn clear" onclick="clearInput(2)">C</div><div class="num-btn" onclick="addNum(2, 0)">0</div><div class="num-btn confirm" onclick="checkAnswer(2)">✔</div>
+            <div class="bg-white question-box" id="p2-question">...</div>
+            <div class="input-numpad-container">
+                <div class="input-wrapper">
+                    <div id="p2-feedback" class="feedback"></div>
+                    <div class="input-display-box" id="p2-input-display"></div>
+                </div>
+                <div class="numpad" id="p2-numpad">
+                    <div class="num-btn" onclick="addNum(2, 1)">1</div><div class="num-btn" onclick="addNum(2, 2)">2</div><div class="num-btn" onclick="addNum(2, 3)">3</div>
+                    <div class="num-btn" onclick="addNum(2, 4)">4</div><div class="num-btn" onclick="addNum(2, 5)">5</div><div class="num-btn" onclick="addNum(2, 6)">6</div>
+                    <div class="num-btn" onclick="addNum(2, 7)">7</div><div class="num-btn" onclick="addNum(2, 8)">8</div><div class="num-btn" onclick="addNum(2, 9)">9</div>
+                    <div class="num-btn clear" onclick="clearInput(2)">C</div><div class="num-btn" onclick="addNum(2, 0)">0</div><div class="num-btn confirm" onclick="checkAnswer(2)">✔</div>
+                </div>
+                <div class="player-info-column">
+                    <div class="avatar-emoji">🐱</div>
+                    <div id="p2-name-display" class="player-name-label">Играч 2</div>
+                </div>
             </div>
             <div id="p2-ai-msg" class="hidden text-red-500 font-bold italic animate-pulse text-[10px] mt-1">Компютърът мисли...</div>
         </div>
     </div>
 
-    <!-- Резултат -->
+    <!-- Screen Result -->
     <div id="screen-result" class="screen bg-purple-700 text-white p-6 relative">
         <canvas id="fireworks-canvas" class="absolute inset-0 pointer-events-none"></canvas>
         <div class="z-10 text-center">
@@ -250,7 +329,6 @@
         const WIN_SCORE = 10;
         let gameActive = false;
 
-        // Фикс за височината на мобилни браузъри
         function updateAppHeight() {
             document.documentElement.style.setProperty('--app-height', `${window.innerHeight}px`);
         }
@@ -269,7 +347,7 @@
             }
         }
 
-        async function callGemini(prompt, sys = "Ти си забавен учител по математика. Отговаряй с JSON.") {
+        async function callGemini(prompt, sys = "Ти си учител по математика. Отговаряй винаги с JSON.") {
             if (!apiKey) return null;
             const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
             try {
@@ -290,6 +368,8 @@
         function goToSettings() {
             players[1].name = document.getElementById('p1-name').value || 'Играч 1';
             players[2].name = document.getElementById('p2-name').value || 'Играч 2';
+            document.getElementById('p1-name-display').innerText = players[1].name;
+            document.getElementById('p2-name-display').innerText = players[2].name;
             switchScreen('screen-settings');
         }
 
@@ -350,20 +430,29 @@
             if (gameSettings.difficulty === 'simple') {
                 let a = Math.floor(Math.random()*8)+2;
                 let b = Math.floor(Math.random()*8)+2;
-                if (gameSettings.op === '*') { q = `${a} × ${b} = ?`; ans = a*b; }
+                if (gameSettings.op === '*') { q = `${a} . ${b} = ?`; ans = a*b; }
                 else { q = `${a*b} ÷ ${a} = ?`; ans = b; }
             } else {
-                const prompt = `Едно изречение задача за ${gameSettings.op === '*' ? 'умножение' : 'деление'} на български. JSON: {"question": "...", "answer": число}`;
-                const res = await callGemini(prompt);
+                const prompt = `Напиши 1 МНОГО КРАТКА текстова задача (МАКС 50 ЗНАКА) за ${gameSettings.op === '*' ? 'умножение' : 'деление'} на български. JSON: {"question": "...", "answer": число}`;
+                const res = await callGemini(prompt, "Ти си учител. Пиши задачи до 2 реда. Използвай '.' за умножение.");
                 if (res) { q = res.question; ans = res.answer; } 
-                else { q = "Грешка! Провери връзката."; ans = 0; }
+                else { q = "Грешка! Провери мрежата."; ans = 0; }
             }
             players[pId].currentAns = ans;
             qEl.innerText = q;
         }
 
-        function addNum(pId, n) { if (gameActive) { players[pId].input += n; document.getElementById(`p${pId}-input-display`).innerText = players[pId].input; } }
-        function clearInput(pId) { players[pId].input = ''; document.getElementById(`p${pId}-input-display`).innerText = ''; }
+        function addNum(pId, n) { 
+            if (gameActive && players[pId].input.length < 5) { 
+                players[pId].input += n; 
+                document.getElementById(`p${pId}-input-display`).innerText = players[pId].input; 
+            } 
+        }
+
+        function clearInput(pId) { 
+            players[pId].input = ''; 
+            document.getElementById(`p${pId}-input-display`).innerText = ''; 
+        }
 
         function checkAnswer(pId) {
             if (!gameActive || players[pId].input === '') return;
@@ -383,7 +472,11 @@
         function showFeedback(pId, txt, col) {
             const el = document.getElementById(`p${pId}-feedback`);
             el.innerText = txt; el.style.color = col; el.style.opacity = 1;
-            setTimeout(() => el.style.opacity = 0, 1500);
+            el.style.transform = "translateY(-10px)";
+            setTimeout(() => {
+                el.style.opacity = 0;
+                el.style.transform = "translateY(0)";
+            }, 1000);
         }
 
         function updateProgress() {
